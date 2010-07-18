@@ -1,53 +1,208 @@
 
-var debug = false;
+var debug = true;
 
 var boardDim = 360;
 var start = 20;
 var squareSize = boardDim / 10;
 var pegSize = 8;
 var numSquares = 10;
-var ships = [];
 var shipSizes = [5, 4, 3, 3, 2];
 var shipHeight = squareSize / 2;
 
-var EMPTY = "rgb(30,144,255)";
-var HIT = "rgb(255, 0, 0)";
-var MISS = "rgb(255, 255, 255)";
+var HIT_PEG_COLOR = "rgb(255,0,0)";
+var MISS_PEG_COLOR = "rgb(255,255,255)";
+var SHIP_COLOR = "rgb(112,138,144)";
+var SHIP_SELECTED_COLOR = "rgb(56,69,72)";
+var BACKGROUND_COLOR = "rgb(255,255,255)";
+var TEXT_COLOR = "rgb(0,0,0)";
+var BOARD_COLOR = "rgb(30,144,255)";
+
+var HIT = HIT_PEG_COLOR;
+var MISS = MISS_PEG_COLOR;
+var EMPTY = BOARD_COLOR;
 
 var boards = [[], []];
-
+var ships = [];
 var selectedShip = -1;
-
-function width() {
-  return squareSize * this.size - squareSize / 2;
-}
-
-function height() {
-  return shipHeight;
-}
-
-function contains(x, y) {
-  if (x >= this.x && x <= this.x + this.width() &&
-      y >= this.y && y <= this.y + shipHeight) {
-      
-    return true;
-  }
-  return false;
-}
+var canvas = null;
+var ctx = null;
 
 function ship(size) {
   this.size = size;
   this.x = 0;
   this.y = 0;
-  this.width = width;
-  this.height = height;
-  this.contains = contains;
   this.selectable = true;
+  this.width = function() { return squareSize * this.size - squareSize / 2; };
+  this.height = function() { return shipHeight; };
+  this.contains = function(x,y) {
+                    if (x >= this.x && x <= this.x + this.width() &&
+                        y >= this.y && y <= this.y + shipHeight)
+                      return true; 
+                    else 
+                      return false;
+                  };
 }
 
-for (var i = 0; i < shipSizes.length; i++) {
-  var s = new ship(shipSizes[i]);
-  ships.push(s);
+function initGame() {
+  canvas = document.getElementById('game');
+  if (!canvas.getContext) {
+    var errorMsg = document.createElement('p');
+    errorMsg.innerHTML = 'The canvas tag is not supported by this browser. ' +
+                         'Try <a href="http://www.google.com/chrome">Chrome</a>!';
+    document.getElementById('content').insertBefore(errorMsg, canvas);
+    return;
+  }
+  ctx = canvas.getContext('2d');
+  
+  for (var i = 0; i < numSquares * numSquares; i++) {
+    boards[0][i] = EMPTY;
+    boards[1][i] = EMPTY;
+  }
+  
+  for (var i = 0; i < shipSizes.length; i++) {
+    var s = new ship(shipSizes[i]);
+    ships.push(s);
+  }
+  
+  if (debug) {
+    var element = document.createElement('p');
+    element.setAttribute('id', 'mouseDebug');
+    document.getElementById('footer').appendChild(element);
+  }
+  
+  drawBoard();
+  
+  canvas.addEventListener('click', mouseCallback, false);
+}
+
+function drawBoard() {
+  ctx.fillStyle = BOARD_COLOR;  
+  ctx.fillRect(start, start, boardDim, boardDim);    
+  ctx.fillRect(boardDim + (start * 2), start, boardDim, boardDim);
+  drawGrid();  
+  drawShips();
+}
+
+function drawGrid() {
+  ctx.beginPath();
+  var offset = boardDim + (start * 2);
+  for (var i = boardDim / numSquares; i < boardDim; i += boardDim / numSquares) {
+    ctx.moveTo(i + start, start);
+    ctx.lineTo(i + start, boardDim + start);
+    ctx.moveTo(i + offset, start);
+    ctx.lineTo(i + offset, boardDim + start);
+  }
+  for (var i = boardDim / numSquares; i < boardDim; i += boardDim / numSquares) {
+    ctx.moveTo(start, i + start);
+    ctx.lineTo(boardDim + start, i + start);
+    ctx.moveTo(offset, i + start);
+    ctx.lineTo(boardDim + offset, i + start);
+  }
+  ctx.stroke();
+  drawCharacters();
+}
+
+function drawCharacters() {
+  ctx.fillStyle = TEXT_COLOR;
+  drawNumbers(0);
+  drawNumbers(boardDim + start);
+  drawLetters(5);
+  drawLetters(5 + boardDim * 2 + start * 2);
+}
+
+function drawNumbers(x) {
+  var number = 1;
+  for (var i = boardDim / numSquares; i <= boardDim; i += boardDim / numSquares) {
+    ctx.fillText(number, i - 3 + x, 15);
+    number++;
+  }
+}
+
+function drawLetters(x) {
+  var letter = "A";
+  for (var i = boardDim / numSquares; i <= boardDim; i += boardDim / numSquares) {
+    ctx.fillText(letter, x, i + 3);
+    letter = String.fromCharCode(letter.charCodeAt() + 1);
+  }
+}
+
+function drawShips() {
+  ctx.fillStyle = SHIP_COLOR;
+  var x = boardDim * 2 + start * 3;
+  var y = start;
+  for (var i = 0; i < ships.length; i++) {
+    ships[i].x = x;
+    ships[i].y = y;
+    ctx.fillRect(x, y, ships[i].width(), ships[i].height());
+    y += squareSize;
+  }
+}
+
+function mouseCallback(event) {  
+  // FIXME: does not work in Firefox
+  var x = event.offsetX;
+  var y = event.offsetY;
+  var square = getSquare(x, y);
+  
+  if (debug) {
+    var mouseDebug = document.getElementById('mouseDebug');
+    mouseDebug.innerHTML = '';
+    mouseDebug.innerHTML += 'Coords: ' + x + ',' + y + '<br />';
+    mouseDebug.innerHTML += 'Board: ' + square.board + ' Square: ' + 
+                            square.row + ', ' + square.column + '<br />';
+  }
+  
+  for (var i = 0; i < ships.length; i++) {
+    if (ships[i].selectable && ships[i].contains(x,y)) {
+      if (debug)
+        mouseDebug.innerHTML += 'Ship: ' + i + ' selected.<br />';
+      if (i != selectedShip) {
+        if (selectedShip != -1) {
+          var s = ships[selectedShip];
+          ctx.fillStyle = SHIP_COLOR;
+          ctx.fillRect(s.x, s.y, s.width(), s.height());
+        }
+        selectedShip = i;
+        var s = ships[selectedShip];
+        ctx.fillStyle = SHIP_SELECTED_COLOR;
+        ctx.fillRect(s.x, s.y, s.width(), s.height());
+      }
+      break;
+    }
+  }
+  
+  if (square.column < 0 || square.row < 0)
+    return;
+    
+  var squareIndex = square.column * numSquares + square.row;
+
+  if (selectedShip != -1) {
+    var s = ships[selectedShip];
+    if (square.column + s.size <= numSquares && square.board == 0) {
+      ctx.fillStyle = BACKGROUND_COLOR;
+      ctx.fillRect(s.x, s.y, s.width(), s.height());
+      selectedShip = -1;
+      s.selectable = false;
+      s.x = square.column * squareSize + start + squareSize / 4;
+      s.y = square.row * squareSize + start + squareSize / 4;
+      ctx.fillStyle = SHIP_COLOR;
+      ctx.fillRect(s.x, s.y, s.width(), s.height());
+    }
+  }
+  else {
+    var currentState = boards[square.board][squareIndex];
+    var newState;
+    
+    if (currentState == EMPTY)
+      newState = MISS;
+    else if (currentState == MISS)
+      newState = HIT;
+    else
+      newState = EMPTY;
+    
+    boards[square.board][squareIndex] = newState;
+    drawPeg(square, newState);
+  }
 }
 
 function getSquare(x, y) {
@@ -74,157 +229,25 @@ function getSquare(x, y) {
   return {column:column, row:row, board:board};
 }
 
-function mouseCallback(event) {  
-  // FIXME: does not work in Firefox
-  var x = event.offsetX;
-  var y = event.offsetY;
-  var square = getSquare(x, y);
-  
-  if (debug) {
-    var mouseCoords = document.getElementById('mouseCoords');
-    var rowColumn = document.getElementById('rowColumn');
-    mouseCoords.innerHTML = 'Coords: ' + x + ',' + y;
-    rowColumn.innerHTML = 'Board: ' + square.board + ' Square: ' + square.column + ', ' + square.row;
-  }
-  
-  for (var i = 0; i < ships.length; i++) {
-    if (ships[i].selectable && ships[i].contains(x,y)) {
-      if (debug)
-        mouseCoords.innerHTML = 'Ship: ' + i + ' selected.';
-      selectedShip = i;
-      break;
-    }
-  }
-  
-  if (square.column < 0 || square.row < 0)
-    return;
-  
-  var canvas = document.getElementById('game');
-  var ctx = canvas.getContext('2d');
-  var squareIndex = square.column * numSquares + square.row;
-
-  if (selectedShip != -1) {
-    var s = ships[selectedShip];
-    ctx.fillStyle = "rgb(255,255,255)";
-    ctx.fillRect(s.x, s.y, s.width(), s.height());
-    selectedShip = -1;
-    s.selectable = false;
-    s.x = square.column * squareSize + start + squareSize / 4;
-    s.y = square.row * squareSize + start + squareSize / 4;
-    ctx.fillStyle = "rgb(112,138,144)";
-    ctx.fillRect(s.x, s.y, s.width(), s.height());
-  }
-  else {
-    var currentState = boards[square.board][squareIndex];
-    var newState;
-    
-    if (currentState == EMPTY)
-      newState = MISS;
-    else if (currentState == MISS)
-      newState = HIT;
-    else
-      newState = EMPTY;
-    
-    boards[square.board][squareIndex] = newState;
-    drawPeg(ctx, square, newState);
-  }
-}
-
-function drawPeg(ctx, square, pegColor) {
+function drawPeg(square, pegColor) {
   ctx.fillStyle = pegColor;
-  var x = square.column * squareSize + start + squareSize / 2 - pegSize / 2;
-  var y = square.row * squareSize + start + squareSize / 2 - pegSize / 2;
+  var pegOffset = squareSize / 2 - pegSize / 2;
+  var x = square.column * squareSize + start + pegOffset;
+  var y = square.row * squareSize + start + pegOffset;
   
-  if (square.board == 1) {
+  if (ctx.fillStyle == EMPTY) {
+    var imageData = ctx.getImageData(x - 1, y - 1, 1, 1);
+    var rgbValues = [];
+    for (var i = 0; i < 3; i++)
+      rgbValues[i] = imageData.data[i];
+    var surroundingColor = 'rgb(' + rgbValues.join(',') + ')';
+    
+    ctx.fillStyle = surroundingColor;
+  }
+  
+  if (square.board == 1)
     x += boardDim + start;
-  }
+    
   ctx.fillRect(x, y, pegSize, pegSize);
-}
-
-function draw() {
-  var canvas = document.getElementById('game');
-  if (canvas.getContext) {
-    var ctx = canvas.getContext('2d');
-    drawBoard(ctx);
-  }
-  
-  for (var i = 0; i < numSquares * numSquares; i++) {
-    boards[0][i] = EMPTY;
-    boards[1][i] = EMPTY;
-  }
-  
-  canvas.addEventListener('click', mouseCallback, false);
-  
-  if (debug) {
-    var element = document.createElement('p');
-    element.setAttribute('id', 'mouseCoords');
-    document.getElementById('footer').appendChild(element);
-    element = document.createElement('p');
-    element.setAttribute('id', 'rowColumn');
-    document.getElementById('footer').appendChild(element);
-  }
-}
-
-function drawBoard(ctx) {
-  ctx.fillStyle = "rgb(30,144,255)";  
-  ctx.fillRect(start, start, boardDim, boardDim);    
-  ctx.fillRect(boardDim + (start * 2), start, boardDim, boardDim);
-  drawGrid(ctx);  
-  drawShips(ctx);
-}
-
-function drawGrid(ctx) {
-  ctx.beginPath();
-  var offset = boardDim + (start * 2);
-  for (i = boardDim / 10; i < boardDim; i = i + boardDim / 10) {
-    ctx.moveTo(i + start, start);
-    ctx.lineTo(i + start, boardDim + start);
-    ctx.moveTo(i + offset, start);
-    ctx.lineTo(i + offset, boardDim + start);
-  }
-  for (i = boardDim / 10; i < boardDim; i = i + boardDim / 10) {
-    ctx.moveTo(start, i + start);
-    ctx.lineTo(boardDim + start, i + start);
-    ctx.moveTo(offset, i + start);
-    ctx.lineTo(boardDim + offset, i + start);
-  }
-  ctx.stroke();
-  drawCharacters(ctx);
-}
-
-function drawCharacters(ctx) {
-  ctx.fillStyle = "rgb(0,0,0)";
-  var number = 1;
-  for (i = boardDim / 10; i <= boardDim; i = i + boardDim / 10) {
-    ctx.fillText(number, i - 3, 15);
-    number++;
-  }
-  var number = 1;
-  for (i = boardDim / 10; i <= boardDim; i = i + boardDim / 10) {
-    ctx.fillText(number, boardDim + start + i - 3, 15);
-    number++;
-  }
-  var letter = "A";
-  for (i = boardDim / 10; i <= boardDim; i = i + boardDim / 10) {
-    ctx.fillText(letter, 5, i + 3);
-    letter = String.fromCharCode(letter.charCodeAt() + 1);
-  }
-  var letter = "A";
-  for (i = boardDim / 10; i <= boardDim; i = i + boardDim / 10) {
-    ctx.fillText(letter, 5 + (boardDim * 2) + (start * 2), i + 3);
-    letter = String.fromCharCode(letter.charCodeAt() + 1);
-  }
-}
-
-function drawShips(ctx) {
-  ctx.fillStyle = "rgb(112,138,144)";
-  
-  for (var i = 0; i < ships.length; i++) {
-    var x = boardDim * 2 + start * 3;
-    var y = start + squareSize * i;
-    ships[i].x = x;
-    ships[i].y = y;
-    ctx.fillRect(x, y, ships[i].width(), ships[i].height());
-  }
 }
 
