@@ -1,27 +1,24 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>Battle Ship</title>
+    <title>Battleship</title>
     <script type="text/javascript" src="battleship.js"></script>
-    <link rel="StyleSheet" href="battleship.css" type="text/css"/>
+    <link rel="stylesheet" href="battleship.css" type="text/css"/>
   </head>
 
   <body onload="draw();">
-    <h1>Battle Ship v1.0b</h1>
-    <!--
-    <p id="mouseCoords">Coords:</p>
-    <p id="rowColumn">Board:  Square:</p>
-    -->
+    <div id="header">
+      <h1>Battleship v1.0b</h1>
+    </div>
     <div>
       <canvas id="game" class="screen" width="950" height="400">
       </canvas>
     </div>
-
-    <hr />
-    
-    <address></address>
-    <p>
-      <!-- hhmts start --> Last modified: Wed Jul 14 19:55:10 CDT 2010 <!-- hhmts end -->
-    </p>
+    <div id="footer">
+      <hr />
+      <p>
+        <!-- hhmts start --> Last modified: Wed Jul 14 19:55:10 CDT 2010 <!-- hhmts end -->
+      </p>
+    </div>
   </body>
 </html>

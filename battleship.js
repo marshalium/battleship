@@ -154,6 +154,15 @@ function draw() {
   }
   
   canvas.addEventListener('click', mouseCallback, false);
+  
+  if (debug) {
+    var element = document.createElement('p');
+    element.setAttribute('id', 'mouseCoords');
+    document.getElementById('footer').appendChild(element);
+    element = document.createElement('p');
+    element.setAttribute('id', 'rowColumn');
+    document.getElementById('footer').appendChild(element);
+  }
 }
 
 function drawBoard(ctx) {
