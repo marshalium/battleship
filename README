@@ -2,6 +2,5 @@
 A javascript battleship game.
 
 TODO
-- Rotation of ships.
 - Counter to keep track of how many ships have been sunk.
 - Support for a variable number of boards.

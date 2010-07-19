@@ -1,5 +1,5 @@
 
-var debug = true;
+var debug = false;
 
 var boardDim = 360;
 var start = 20;
@@ -24,23 +24,33 @@ var EMPTY = BOARD_COLOR;
 var boards = [[], []];
 var ships = [];
 var selectedShip = -1;
+var shipsRotated = false;
 var canvas = null;
 var ctx = null;
+var rotateButton = {x:boardDim * 2 + start * 3, y:squareSize * 9 + start, 
+                    width:squareSize * 4, height:squareSize };
 
 function ship(size) {
   this.size = size;
   this.x = 0;
   this.y = 0;
   this.selectable = true;
-  this.width = function() { return squareSize * this.size - squareSize / 2; };
-  this.height = function() { return shipHeight; };
+  this.rotated = false;
+  this.width = squareSize * this.size - squareSize / 2;
+  this.height = shipHeight;
   this.contains = function(x,y) {
-                    if (x >= this.x && x <= this.x + this.width() &&
-                        y >= this.y && y <= this.y + shipHeight)
+                    if (x >= this.x && x <= this.x + this.width &&
+                        y >= this.y && y <= this.y + this.height)
                       return true; 
                     else 
                       return false;
                   };
+  this.rotate = function () { 
+                  var tmp = this.width; 
+                  this.width = this.height; 
+                  this.height = tmp; 
+                  this.rotated = !this.rotated;
+                };
 }
 
 function initGame() {
@@ -81,6 +91,7 @@ function drawBoard() {
   ctx.fillRect(boardDim + (start * 2), start, boardDim, boardDim);
   drawGrid();  
   drawShips();
+  drawRotateButton();
 }
 
 function drawGrid() {
@@ -127,15 +138,32 @@ function drawLetters(x) {
 }
 
 function drawShips() {
-  ctx.fillStyle = SHIP_COLOR;
   var x = boardDim * 2 + start * 3;
   var y = start;
+  ctx.fillStyle = BACKGROUND_COLOR;
+  ctx.fillRect(x, y, 950 - x, y + boardDim / 2);
+  ctx.fillStyle = SHIP_COLOR;
   for (var i = 0; i < ships.length; i++) {
-    ships[i].x = x;
-    ships[i].y = y;
-    ctx.fillRect(x, y, ships[i].width(), ships[i].height());
-    y += squareSize;
+    var s = ships[i];
+    if (s.selectable) {
+      s.x = x;
+      s.y = y;
+      ctx.fillRect(x, y, s.width, s.height);
+      if (!shipsRotated)
+        y += squareSize;
+      else
+        x += squareSize;
+    }
   }
+}
+
+function drawRotateButton() {
+  var x = rotateButton.x;
+  var y = rotateButton.y;
+  ctx.fillStyle = TEXT_COLOR;
+  ctx.strokeRect(x, y, rotateButton.width, rotateButton.height);
+  ctx.font = '28px sans-serif';
+  ctx.fillText('Rotate', x + squareSize - 5, y + squareSize - 7);
 }
 
 function mouseCallback(event) {  
@@ -160,15 +188,33 @@ function mouseCallback(event) {
         if (selectedShip != -1) {
           var s = ships[selectedShip];
           ctx.fillStyle = SHIP_COLOR;
-          ctx.fillRect(s.x, s.y, s.width(), s.height());
+          ctx.fillRect(s.x, s.y, s.width, s.height);
         }
         selectedShip = i;
         var s = ships[selectedShip];
         ctx.fillStyle = SHIP_SELECTED_COLOR;
-        ctx.fillRect(s.x, s.y, s.width(), s.height());
+        ctx.fillRect(s.x, s.y, s.width, s.height);
+      }
+      else {
+        var s = ships[selectedShip];
+        ctx.fillStyle = SHIP_COLOR;
+        ctx.fillRect(s.x, s.y, s.width, s.height);
+        selectedShip = -1;
       }
       break;
     }
+  }
+  
+  if (x >= rotateButton.x && x <= rotateButton.x + rotateButton.width &&
+      y >= rotateButton.y && y <= rotateButton.y + rotateButton.height) {
+    for (var i = 0; i < ships.length; i++) {
+      var s = ships[i];
+      if (s.selectable) {
+        s.rotate();
+      }
+    }
+    shipsRotated = !shipsRotated;
+    drawShips();
   }
   
   if (square.column < 0 || square.row < 0)
@@ -178,15 +224,18 @@ function mouseCallback(event) {
 
   if (selectedShip != -1) {
     var s = ships[selectedShip];
-    if (square.column + s.size <= numSquares && square.board == 0) {
+    if (((s.rotated && square.row + s.size <= numSquares) ||
+         (!s.rotated && square.column + s.size <= numSquares)) && 
+        square.board == 0) {
       ctx.fillStyle = BACKGROUND_COLOR;
-      ctx.fillRect(s.x, s.y, s.width(), s.height());
+      ctx.fillRect(s.x, s.y, s.width, s.height);
       selectedShip = -1;
       s.selectable = false;
       s.x = square.column * squareSize + start + squareSize / 4;
       s.y = square.row * squareSize + start + squareSize / 4;
       ctx.fillStyle = SHIP_COLOR;
-      ctx.fillRect(s.x, s.y, s.width(), s.height());
+      ctx.fillRect(s.x, s.y, s.width, s.height);
+      drawShips();
     }
   }
   else {
