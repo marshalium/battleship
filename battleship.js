@@ -148,6 +148,12 @@ function drawShips() {
     if (s.selectable) {
       s.x = x;
       s.y = y;
+      if (i == selectedShip) {
+        ctx.fillStyle = SHIP_SELECTED_COLOR;
+      }
+      else {
+        ctx.fillStyle = SHIP_COLOR;
+      }
       ctx.fillRect(x, y, s.width, s.height);
       if (!shipsRotated)
         y += squareSize;
@@ -167,9 +173,14 @@ function drawRotateButton() {
 }
 
 function mouseCallback(event) {  
-  // FIXME: does not work in Firefox
   var x = event.offsetX;
   var y = event.offsetY;
+  if (!x) {
+    var canvas = document.getElementById('game');
+    x = event.layerX - canvas.offsetLeft ;
+    y = event.layerY - canvas.offsetTop;
+  }
+  
   var square = getSquare(x, y);
   
   if (debug) {
@@ -224,15 +235,19 @@ function mouseCallback(event) {
 
   if (selectedShip != -1) {
     var s = ships[selectedShip];
+    var targetX = square.column * squareSize + start + squareSize / 4;
+    var targetY = square.row * squareSize + start + squareSize / 4;
     if (((s.rotated && square.row + s.size <= numSquares) ||
-         (!s.rotated && square.column + s.size <= numSquares)) && 
+         (!s.rotated && square.column + s.size <= numSquares)) &&
+        (getPixelColor(targetX, targetY) != SHIP_COLOR && 
+         getPixelColor(targetX + s.width - 1, targetY + s.height - 1) != SHIP_COLOR) && 
         square.board == 0) {
       ctx.fillStyle = BACKGROUND_COLOR;
       ctx.fillRect(s.x, s.y, s.width, s.height);
       selectedShip = -1;
       s.selectable = false;
-      s.x = square.column * squareSize + start + squareSize / 4;
-      s.y = square.row * squareSize + start + squareSize / 4;
+      s.x = targetX;
+      s.y = targetY;
       ctx.fillStyle = SHIP_COLOR;
       ctx.fillRect(s.x, s.y, s.width, s.height);
       drawShips();
@@ -284,13 +299,8 @@ function drawPeg(square, pegColor) {
   var x = square.column * squareSize + start + pegOffset;
   var y = square.row * squareSize + start + pegOffset;
   
-  if (ctx.fillStyle == EMPTY) {
-    var imageData = ctx.getImageData(x - 1, y - 1, 1, 1);
-    var rgbValues = [];
-    for (var i = 0; i < 3; i++)
-      rgbValues[i] = imageData.data[i];
-    var surroundingColor = 'rgb(' + rgbValues.join(',') + ')';
-    
+  if (pegColor == EMPTY) {
+    var surroundingColor = getPixelColor(x - 1, y - 1);
     ctx.fillStyle = surroundingColor;
   }
   
@@ -298,5 +308,13 @@ function drawPeg(square, pegColor) {
     x += boardDim + start;
     
   ctx.fillRect(x, y, pegSize, pegSize);
+}
+
+function getPixelColor(x, y) {
+  var imageData = ctx.getImageData(x, y, 1, 1);
+  var rgbValues = [];
+    for (var i = 0; i < 3; i++)
+      rgbValues[i] = imageData.data[i];
+  return 'rgb(' + rgbValues.join(',') + ')';
 }
 
