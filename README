@@ -2,5 +2,7 @@
 A javascript battleship game.
 
 TODO
+- Cleanup the code.
 - Counter to keep track of how many ships have been sunk.
 - Support for a variable number of boards.
+
