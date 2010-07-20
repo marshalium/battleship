@@ -54,7 +54,7 @@ function ship(size) {
 }
 
 function initGame() {
-  canvas = document.getElementById('game');
+  var canvas = document.getElementById('game');
   if (!canvas.getContext) {
     var errorMsg = document.createElement('p');
     errorMsg.innerHTML = 'The canvas tag is not supported by this browser. ' +
@@ -142,18 +142,16 @@ function drawShips() {
   var y = start;
   ctx.fillStyle = BACKGROUND_COLOR;
   ctx.fillRect(x, y, 950 - x, y + boardDim / 2);
-  ctx.fillStyle = SHIP_COLOR;
+  
   for (var i = 0; i < ships.length; i++) {
     var s = ships[i];
     if (s.selectable) {
       s.x = x;
       s.y = y;
-      if (i == selectedShip) {
+      if (i == selectedShip)
         ctx.fillStyle = SHIP_SELECTED_COLOR;
-      }
-      else {
+      else
         ctx.fillStyle = SHIP_COLOR;
-      }
       ctx.fillRect(x, y, s.width, s.height);
       if (!shipsRotated)
         y += squareSize;
@@ -168,8 +166,8 @@ function drawRotateButton() {
   var y = rotateButton.y;
   ctx.fillStyle = TEXT_COLOR;
   ctx.strokeRect(x, y, rotateButton.width, rotateButton.height);
-  ctx.font = '28px sans-serif';
-  ctx.fillText('Rotate', x + squareSize - 5, y + squareSize - 7);
+  ctx.font = '24px sans-serif';
+  ctx.fillText('Rotate', x + squareSize, y + squareSize - 9);
 }
 
 function mouseCallback(event) {  
@@ -181,7 +179,7 @@ function mouseCallback(event) {
     y = event.layerY - canvas.offsetTop;
   }
   
-  var square = getSquare(x, y);
+  var square = getSquareContainingPoint(x, y);
   
   if (debug) {
     var mouseDebug = document.getElementById('mouseDebug');
@@ -195,23 +193,22 @@ function mouseCallback(event) {
     if (ships[i].selectable && ships[i].contains(x,y)) {
       if (debug)
         mouseDebug.innerHTML += 'Ship: ' + i + ' selected.<br />';
+      
+      if (selectedShip != -1) {  
+        var s = ships[selectedShip];
+        ctx.fillStyle = SHIP_COLOR;
+        ctx.fillRect(s.x, s.y, s.width, s.height);        
+      }
+      
       if (i != selectedShip) {
-        if (selectedShip != -1) {
-          var s = ships[selectedShip];
-          ctx.fillStyle = SHIP_COLOR;
-          ctx.fillRect(s.x, s.y, s.width, s.height);
-        }
         selectedShip = i;
         var s = ships[selectedShip];
         ctx.fillStyle = SHIP_SELECTED_COLOR;
         ctx.fillRect(s.x, s.y, s.width, s.height);
       }
-      else {
-        var s = ships[selectedShip];
-        ctx.fillStyle = SHIP_COLOR;
-        ctx.fillRect(s.x, s.y, s.width, s.height);
+      else
         selectedShip = -1;
-      }
+        
       break;
     }
   }
@@ -269,7 +266,7 @@ function mouseCallback(event) {
   }
 }
 
-function getSquare(x, y) {
+function getSquareContainingPoint(x, y) {
   if ((x > boardDim + start && x < boardDim + start + start) || 
       x < start || y < start || 
       y > start + boardDim || x > boardDim * 2 + start * 2)
@@ -313,8 +310,8 @@ function drawPeg(square, pegColor) {
 function getPixelColor(x, y) {
   var imageData = ctx.getImageData(x, y, 1, 1);
   var rgbValues = [];
-    for (var i = 0; i < 3; i++)
-      rgbValues[i] = imageData.data[i];
+  for (var i = 0; i < 3; i++)
+    rgbValues[i] = imageData.data[i];
   return 'rgb(' + rgbValues.join(',') + ')';
 }
 
