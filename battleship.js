@@ -27,8 +27,8 @@ var selectedShip = -1;
 var shipsRotated = false;
 var canvas = null;
 var ctx = null;
-var rotateButton = {x:boardDim * 2 + start * 3, y:squareSize * 9 + start, 
-                    width:squareSize * 4, height:squareSize };
+var rotateButton = { x:boardDim * 2 + start * 3, y:squareSize * 9 + start, 
+                     width:squareSize * 4, height:squareSize };
 
 function ship(size) {
   this.size = size;
@@ -217,9 +217,8 @@ function mouseCallback(event) {
       y >= rotateButton.y && y <= rotateButton.y + rotateButton.height) {
     for (var i = 0; i < ships.length; i++) {
       var s = ships[i];
-      if (s.selectable) {
+      if (s.selectable)
         s.rotate();
-      }
     }
     shipsRotated = !shipsRotated;
     drawShips();
