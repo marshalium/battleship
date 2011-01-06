@@ -60,6 +60,7 @@ function initGame() {
     errorMsg.innerHTML = 'The canvas tag is not supported by this browser. ' +
                          'Try <a href="http://www.google.com/chrome">Chrome</a>!';
     document.getElementById('content').insertBefore(errorMsg, canvas);
+    canvas.style.display = 'none';
     return;
   }
   ctx = canvas.getContext('2d');
@@ -74,15 +75,15 @@ function initGame() {
     ships.push(s);
   }
   
-  if (debug) {
-    var element = document.createElement('p');
-    element.setAttribute('id', 'mouseDebug');
-    document.getElementById('footer').appendChild(element);
-  }
-  
   drawBoard();
   
   canvas.addEventListener('click', mouseCallback, false);
+}
+
+function log(msg) {
+  if (typeof console != 'undefined' && console.log) {
+    console.log(msg);
+  }
 }
 
 function drawBoard() {
@@ -182,17 +183,14 @@ function mouseCallback(event) {
   var square = getSquareContainingPoint(x, y);
   
   if (debug) {
-    var mouseDebug = document.getElementById('mouseDebug');
-    mouseDebug.innerHTML = '';
-    mouseDebug.innerHTML += 'Coords: ' + x + ',' + y + '<br />';
-    mouseDebug.innerHTML += 'Board: ' + square.board + ' Square: ' + 
-                            square.row + ', ' + square.column + '<br />';
+    log('Coords: ' + x + ',' + y);
+    log('Board: ' + square.board + ' Square: ' + square.row + ', ' + square.column);
   }
   
   for (var i = 0; i < ships.length; i++) {
     if (ships[i].selectable && ships[i].contains(x,y)) {
       if (debug)
-        mouseDebug.innerHTML += 'Ship: ' + i + ' selected.<br />';
+        log('Ship: ' + i + ' selected');
       
       if (selectedShip != -1) {  
         var s = ships[selectedShip];
@@ -277,7 +275,7 @@ function getSquareContainingPoint(x, y) {
     x -= start;
   y -= start;
   
-  var column = Math.floor(x / squareSize)
+  var column = Math.floor(x / squareSize);
   var row = Math.floor(y / squareSize);
   var board = 0;
   
@@ -314,3 +312,4 @@ function getPixelColor(x, y) {
   return 'rgb(' + rgbValues.join(',') + ')';
 }
 
+window.onload = initGame;
