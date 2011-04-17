@@ -1,11 +1,7 @@
-
-A javascript battleship game.
+A JavaScript battleship game.
 
 Playable at:
 http://dl.dropbox.com/u/617914/battleship/battleship.html
 
 TODO
-- Cleanup the code.
-- Counter to keep track of how many ships have been sunk.
 - Support for a variable number of boards.
-

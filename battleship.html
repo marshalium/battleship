@@ -4,22 +4,32 @@
     <title>Battleship</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <link rel="stylesheet" href="battleship.css" type="text/css" />
+    <script type="text/javascript" src="jquery-1.5.2.min.js"></script>
+    <script type="text/javascript" src="raphael-min.js"></script>
     <script type="text/javascript" src="battleship.js"></script>
   </head>
   <body>
     <div id="header">
       <h1>Battleship</h1>
     </div>
-    <div id="content">
-      <canvas id="game" class="screen" width="950" height="400">
-      </canvas>
+    <div id="game">
+    </div>
+    <div id="state-selector">
+      <label><input type="radio" name="state" value="ships" />Ships</label><br />
+      <label><input type="radio" name="state" value="pegs" />Pegs</label>
     </div>
     <div id="footer">
-      <hr />
-      <p>
-        Written by: Marcus DuFrane &lt;marcusdufrane at gmail dot com&gt; and 
-        Marshall Scorcio &lt;marshallscorcio at gmail dot com&gt;<br />
-      </p>
+      <h3>Instructions</h3>
+      <ul>
+        <li>Use the radio buttons to switch between placing ships and placing pegs</li>
+        <li>When placing ships, double click on them to rotate</li>
+        <li>Battleship is best played using two laptops to provide the full retro-battleship effect</li>
+      </ul>
+      <h3>Authors</h3>
+      <ul>
+        <li>Marshall Scorcio &lt;marshallscorcio at gmail dot com&gt;</li>
+        <li>Marcus DuFrane &lt;marcusdufrane at gmail dot com&gt;</li>
+      </ul>
     </div>
   </body>
 </html>
