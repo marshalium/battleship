@@ -180,12 +180,12 @@ $(document).ready(function() {
       var snapX = function(x) {
         var targets = rotated ? rotatedTargetsX : snapTargetsX;
         return Raphael.snapTo(targets, x, SQUARE_SIZE / 2);
-     };
+      };
      
-     var snapY = function(y) {
-      var targets = rotated ? rotatedTargetsY : snapTargetsY;
-      return Raphael.snapTo(targets, y, SQUARE_SIZE / 2);
-     };
+      var snapY = function(y) {
+        var targets = rotated ? rotatedTargetsY : snapTargetsY;
+        return Raphael.snapTo(targets, y, SQUARE_SIZE / 2);
+      };
       
       var start = function() {
         if (!placingShips) {
@@ -244,16 +244,18 @@ $(document).ready(function() {
       return ship;
     });
   }
-  
+
   function log() {
-    if (typeof console != 'undefined' && console.log && console.log.apply) {
-      console.log.apply(console, arguments);
-    } else {
-      // Hack because IE does not suport console.log.apply()
-      var args = $.map(arguments, function(arg, i) {
-        return 'arguments[' + i + ']';
-      });
-      eval('console.log(' + args.join(',') + ')');
+    if (typeof console != 'undefined' && console.log) {
+      if (console.log.apply) {
+        console.log.apply(console, arguments);
+      } else {
+        // Hack because IE does not suport console.log.apply()
+        var args = $.map(arguments, function(arg, i) {
+          return 'arguments[' + i + ']';
+        });
+        eval('console.log(' + args.join(',') + ')');
+      }
     }
   }
   
